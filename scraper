@@ -67,9 +67,14 @@ getDirector()
 getPoster()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	count=$(grep -zPo '(?<=> <img alt=")\s*\K.*?(?=\s*itemprop>)'  ~/movie_local)
-	echo -n "Poster Link: "
-	echo "$count"
+	count=$(grep -zPo -m 1 '(?<=src="https://images-na\.ssl-images-amazon\.com/images/M)\K.*?(?=jpg)'  ~/movie_local|head -1)
+	url_first_part="https://images-na.ssl-images-amazon.com/images/M"
+	url_last_part="jpg"
+	image_url="$url_first_part$count$url_last_part"
+	#wget -q "${image_url}" -O random.jpg
+	mkdir ~/${OPTARG}
+	wget -q "${image_url}" -O ~/${OPTARG}/${OPTARG}Poster.jpg
+	echo "Download complete"
 	rm ~/movie_local
 }
 getRating()
