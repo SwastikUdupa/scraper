@@ -71,7 +71,6 @@ getPoster()
 	url_first_part="https://images-na.ssl-images-amazon.com/images/M"
 	url_last_part="jpg"
 	image_url="$url_first_part$count$url_last_part"
-	#wget -q "${image_url}" -O random.jpg
 	mkdir ~/${OPTARG}
 	wget -q "${image_url}" -O ~/${OPTARG}/${OPTARG}Poster.jpg
 	echo "Download complete"
