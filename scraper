@@ -134,7 +134,6 @@ do
               flag='1'
 	      ;;
             s)
-	      movie="${OPTARG}"
               getUrl
               getSummary
 	      flag='1'
