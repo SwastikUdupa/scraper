@@ -33,13 +33,6 @@ getUrl() #this is used to get the url of the first movie in the suggestions of i
 	rm ~/movie_list #deleting the movie list since we dont need it anymore
 }
 
-getActor()
-{
-	wget "${final_url}" -q -O ~/movie_local #to save the page source of the actual movie in a local file called movie_list
-	count=$(grep -Po -m 1 "(?<=td class=\"primary_photo\"> <a href=\").*?(?=\s*ref_=fn_al_tt_1\")" ~/movie_local|head -1) 
-	rm ~/movie_local
-}
-
 getSummary()
 {
 	wget "${final_url}" -q -O ~/movie_local
@@ -95,7 +88,7 @@ getMovies()
 getActor()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	count=$(grep -zPo '(?<=<meta name="description" content="Directed by ).*With\K.*?(?=\. )'  ~/movie_local)
+	count=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\.)'  ~/movie_local)
 	echo -n "Actors: "
 	echo "$count"
 	rm ~/movie_local
