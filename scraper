@@ -1,0 +1,164 @@
+#!/bin/sh
+
+scriptname=$0   # $0 is the name of the program
+
+usage () {
+   cat <<EOF
+Usage: $scriptname [-o] [-a] [-d] [-c] [-r] [-p] [-H] [-h] [-w] movie name
+   -a   Lead actor and Actress
+   -c   Cast
+   -d   Duration
+   -D   Director
+   -h   Help
+   -H   History of previous searches by the user
+   -o   Overview(Actor,Actress,Ratings,Director and Plot)
+   -p   Download the poster
+   -s   Summary of the movie
+   -r   Rating
+   -w   Movies to be released this week
+   
+EOF
+   exit 0
+}
+getUrl() #this is used to get the url of the first movie in the suggestions of imdb  based on your input
+{
+	url_first_part="http://www.imdb.com/find?ref_=nv_sr_fn&q="
+	url_last_part="&s=all"
+	url="${url_first_part}${OPTARG}${url_last_part}" #the flower brackets ar used for space protection
+	wget "${url}" -q -O ~/movie_list #to save the page source of movie suggestions in a local file called movie_list
+	count=$(grep -Po -m 1 "(?<=td class=\"primary_photo\"> <a href=\").*?(?=\s*ref_=fn_al_tt_1\")" ~/movie_list|head -1) 
+	part_to_be_added="ref_=fn_al_tt_1"
+	final_url="www.imdb.com$count$part_to_be_added"
+	echo "Imdb link:$final_url"
+	rm ~/movie_list #deleting the movie list since we dont need it anymore
+}
+
+getActor()
+{
+	wget "${final_url}" -q -O ~/movie_local #to save the page source of the actual movie in a local file called movie_list
+	count=$(grep -Po -m 1 "(?<=td class=\"primary_photo\"> <a href=\").*?(?=\s*ref_=fn_al_tt_1\")" ~/movie_local|head -1) 
+	rm ~/movie_local
+}
+
+getSummary()
+{
+	wget "${final_url}" -q -O ~/movie_local
+	count=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local) #z option is added to include multi line functionality for grep
+	echo "Summary:"
+	echo "$count"
+	rm ~/movie_local
+}
+getDuration()
+{
+	wget "${final_url}" -q -O ~/movie_local 
+	count=$(grep -zPo '(?<=<time itemprop="duration" datetime=").*?>\K.*?(?=</time>)'  ~/movie_local)
+	echo -n "Duration: "
+	echo "$count"
+	rm ~/movie_local
+}
+getDirector()
+{
+	wget "${final_url}" -q -O ~/movie_local 
+	count=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+	echo -n "Director: "
+	echo "$count"
+	rm ~/movie_local
+}
+getPoster()
+{
+	wget "${final_url}" -q -O ~/movie_local 
+	count=$(grep -zPo '(?<=> <img alt=")\s*\K.*?(?=\s*itemprop>)'  ~/movie_local)
+	echo -n "Poster Link: "
+	echo "$count"
+	rm ~/movie_local
+}
+getRating()
+{
+	wget "${final_url}" -q -O ~/movie_local 
+	count=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
+	echo "Imdb Rating: "
+	echo "$count"
+	rm ~/movie_local
+}
+getMovies()
+{
+	wget "http://www.imdb.com/movies-in-theaters/" -q -O ~/movie_local 
+	count=$(grep -zPo '(?<=alt=")\K.*?(?= Poster)'  ~/movie_local)
+	echo "Movies to be released this week: "
+	echo "$count"
+	rm ~/movie_local
+}
+unset flag #this is to unset the value of flag if it had any value previously
+while getopts ":a:c:d:D:hHo:p:r:s:w" opt
+do
+	case $opt in
+	    a)
+	      movie="${OPTARG}"
+	      getUrl
+	      getActor
+	      flag='1' #we set flag to 1 so as to check if an option was pased or not.Since it skips the getopt part if no option was passed
+	      ;;
+	    c)
+              getUrl
+	      flag='1'
+	      ;;
+            d)
+              getUrl
+	      getDuration
+              flag='1'
+	      ;;
+	    D)
+              getUrl
+              getDirector
+              flag='1'
+	      ;;
+            h)usage
+              flag='1'
+	      ;;
+            H)
+              getUrl
+              flag='1'
+	      ;;
+            o)
+              getUrl
+              flag='1'
+	      ;;
+            p)
+              getUrl
+	      getPoster
+              flag='1'
+	      ;;
+            r)
+              getUrl
+	      getRating
+              flag='1'
+	      ;;
+            s)
+	      movie="${OPTARG}"
+              getUrl
+              getSummary
+	      flag='1'
+              ;;
+            w)
+              getMovies
+              flag='1'
+	      ;;
+	    \?)
+	      echo "Invalid option: -$OPTARG" >&2
+              flag='1'
+	      usage
+	      ;;
+	    :)
+	      echo "Option -$OPTARG requires an argument." >&2
+              usage
+	      flag='1'
+	      ;;
+	  esac
+done
+if [ -z "$flag" ] #Here we check if an option was passed or not
+then
+	echo "No options were passed"
+	usage
+fi
+
+
