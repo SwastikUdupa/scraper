@@ -67,6 +67,7 @@ getPoster()
 	mkdir ~/${OPTARG}
 	wget -q "${image_url}" -O ~/${OPTARG}/${OPTARG}Poster.jpg
 	echo "Download complete"
+	xdg-open ~/${OPTARG}/${OPTARG}Poster.jpg
 	rm ~/movie_local
 }
 getRating()
@@ -120,10 +121,14 @@ getOverview()
 	echo "\nImdb movie URL\t:$final_url"
 	rm ~/movie_local
 }
-
+getHistory()
+{
+	cat ~/movie_history.txt
+}
 unset flag #this is to unset the value of flag if it had any value previously
 while getopts ":a:c:d:D:hHo:p:r:s:w" opt
 do
+	echo "${OPTARG}" >> ~/movie_history.txt
 	case $opt in
 	    a)
 	      movie="${OPTARG}"
@@ -150,7 +155,7 @@ do
               flag='1'
 	      ;;
             H)
-              getUrl
+              getHistory
               flag='1'
 	      ;;
             o)
