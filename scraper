@@ -101,6 +101,26 @@ getCast()
 	echo "$count"
 	rm ~/movie_local
 }
+getOverview()
+{
+
+	wget "${final_url}" -q -O ~/movie_local 
+	title=$(grep -zPo '(?<=<title>)\K.*?(?= \()'  ~/movie_local)
+	echo "Title\t\t:$title"
+	year=$(grep -zPo '(?<=<title>).*?\(\K.*?(?=\))'  ~/movie_local)
+	echo "Year\t\t:$year"
+	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
+	echo "Rating\t\t:$rating/10"
+	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+	echo -n "Director\t:$director\n"
+	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With \K.*?(?=\.)'  ~/movie_local)
+	echo -n "Cast\t\t:$actor\n"
+	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
+	echo "Plot\t\t:\n\n$summary\n"
+	echo "\nImdb movie URL\t:$final_url"
+	rm ~/movie_local
+}
+
 unset flag #this is to unset the value of flag if it had any value previously
 while getopts ":a:c:d:D:hHo:p:r:s:w" opt
 do
@@ -135,6 +155,7 @@ do
 	      ;;
             o)
               getUrl
+	      getOverview
               flag='1'
 	      ;;
             p)
