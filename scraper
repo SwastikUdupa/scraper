@@ -67,7 +67,8 @@ getPoster()
 	mkdir ~/${OPTARG}
 	wget -q "${image_url}" -O ~/${OPTARG}/${OPTARG}Poster.jpg
 	echo "Download complete"
-	xdg-open ~/${OPTARG}/${OPTARG}Poster.jpg
+	#alias xdg-open="xdg-open 2>/dev/null"
+	#xdg-open ~/zootopia
 	rm ~/movie_local
 }
 getRating()
