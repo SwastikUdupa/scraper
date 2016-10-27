@@ -4,7 +4,7 @@ scriptname=$0   # $0 is the name of the program
 
 usage () {
    cat <<EOF
-Usage: $scriptname [-o] [-a] [-d] [-c] [-r] [-p] [-H] [-h] [-w] movie name
+Usage: $scriptname [-o] [-a] [-d] [-c] [-r] [-p] [-H] [-h] [-w] "movie name"
    -a   Lead actor and Actress
    -c   Cast
    -d   Duration
@@ -20,6 +20,7 @@ Usage: $scriptname [-o] [-a] [-d] [-c] [-r] [-p] [-H] [-h] [-w] movie name
 EOF
    exit 0
 }
+urlColor="\033[91m"
 getUrl() #this is used to get the url of the first movie in the suggestions of imdb  based on your input
 {
 	url_first_part="http://www.imdb.com/find?ref_=nv_sr_fn&q="
@@ -29,7 +30,6 @@ getUrl() #this is used to get the url of the first movie in the suggestions of i
 	count=$(grep -Po -m 1 "(?<=td class=\"primary_photo\"> <a href=\").*?(?=\s*ref_=fn_al_tt_1\")" ~/movie_list|head -1) 
 	part_to_be_added="ref_=fn_al_tt_1"
 	final_url="www.imdb.com$count$part_to_be_added"
-	echo "Imdb link:$final_url"
 	rm ~/movie_list #deleting the movie list since we dont need it anymore
 }
 
@@ -105,21 +105,21 @@ getCast()
 }
 getOverview()
 {
-
+	color="\033[92m"
 	wget "${final_url}" -q -O ~/movie_local 
 	title=$(grep -zPo '(?<=<title>)\K.*?(?= \()'  ~/movie_local)
-	echo "Title\t\t:$title"
+	echo "${color}Title\t\t:\033[96m$title"
 	year=$(grep -zPo '(?<=<title>).*?\(\K.*?(?=\))'  ~/movie_local)
-	echo "Year\t\t:$year"
+	echo "${color}Year\t\t:\033[96m$year"
 	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
-	echo "Rating\t\t:$rating/10"
+	echo "${color}Rating\t\t:\033[96m$rating/10"
 	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
-	echo -n "Director\t:$director\n"
+	echo -n "${color}Director\t:\033[96m$director\n"
 	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With \K.*?(?=\.)'  ~/movie_local)
-	echo -n "Cast\t\t:$actor\n"
+	echo -n "${color}Cast\t\t:\033[96m$actor\n"
 	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
-	echo "Plot\t\t:\n\n$summary\n"
-	echo "\nImdb movie URL\t:$final_url"
+	echo "${color}Plot\t\t:\n\n\033[96m$summary\n"
+	echo "${color}Imdb movie URL\t:$urlColor$final_url"
 	rm ~/movie_local
 }
 getHistory()
@@ -200,5 +200,3 @@ then
 	echo "No options were passed"
 	usage
 fi
-
-
