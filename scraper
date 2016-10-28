@@ -4,7 +4,7 @@ scriptname=$0   # $0 is the name of the program
 
 usage () {
    cat <<EOF
-Usage: $scriptname [-o] [-a] [-d] [-c] [-r] [-p] [-H] [-h] [-w] movie name
+Usage: $scriptname [-o] [-a] [-d] [-c] [-r] [-p] [-H] [-h] [-w] "movie name"
    -a   Lead actor and Actress
    -c   Cast
    -d   Duration
@@ -15,111 +15,120 @@ Usage: $scriptname [-o] [-a] [-d] [-c] [-r] [-p] [-H] [-h] [-w] movie name
    -p   Download the poster
    -s   Summary of the movie
    -r   Rating
-   -w   Movies to be released this week
+   -w   Movies in theatres this week
    
 EOF
    exit 0
 }
+urlColor="\033[91m"
 getUrl() #this is used to get the url of the first movie in the suggestions of imdb  based on your input
 {
 	url_first_part="http://www.imdb.com/find?ref_=nv_sr_fn&q="
 	url_last_part="&s=all"
 	url="${url_first_part}${OPTARG}${url_last_part}" #the flower brackets ar used for space protection
 	wget "${url}" -q -O ~/movie_list #to save the page source of movie suggestions in a local file called movie_list
-	count=$(grep -Po -m 1 "(?<=td class=\"primary_photo\"> <a href=\").*?(?=\s*ref_=fn_al_tt_1\")" ~/movie_list|head -1) 
-	part_to_be_added="ref_=fn_al_tt_1"
-	final_url="www.imdb.com$count$part_to_be_added"
-	echo "Imdb link:$final_url"
-	rm ~/movie_list #deleting the movie list since we dont need it anymore
+	result=$(grep -zPo -m 1 '(?<=<h1 class="findHeader">)\K.*?(?=<span class="findSearchTerm">)'  ~/movie_list|head -1)
+	cmpText="No results found for "
+	if [ "$result" = "$cmpText" ]
+	then
+		check=0;
+	        echo "Sorry.No results were found."
+		rm ~/movie_list
+	else
+		check=1;
+		titleId=$(grep -Po -m 1 "(?<=td class=\"primary_photo\"> <a href=\").*?(?=\s*ref_=fn_al_tt_1\")" ~/movie_list|head -1) 
+		part_to_be_added="ref_=fn_al_tt_1"
+		final_url="www.imdb.com$titleId$part_to_be_added"
+		rm ~/movie_list #deleting the movie list since we dont need it anymore
+	fi
 }
 
 getSummary()
 {
 	wget "${final_url}" -q -O ~/movie_local
-	count=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local) #z option is added to include multi line functionality for grep
+	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local) #z option is added to include multi line functionality for grep
 	echo "Summary:"
-	echo "$count"
+	echo "$summary"
 	rm ~/movie_local
 }
 getDuration()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	count=$(grep -zPo '(?<=<time itemprop="duration" datetime=").*?>\K.*?(?=</time>)'  ~/movie_local)
+	duration=$(grep -zPo '(?<=<time itemprop="duration" datetime=").*?>\K.*?(?=</time>)'  ~/movie_local)
 	echo -n "Duration: "
-	echo "$count"
+	echo "$duration"
 	rm ~/movie_local
 }
 getDirector()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	count=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
 	echo -n "Director: "
-	echo "$count"
+	echo "$director"
 	rm ~/movie_local
 }
 getPoster()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	count=$(grep -zPo -m 1 '(?<=src="https://images-na\.ssl-images-amazon\.com/images/M)\K.*?(?=jpg)'  ~/movie_local|head -1)
+	poster=$(grep -zPo -m 1 '(?<=src="https://images-na\.ssl-images-amazon\.com/images/M)\K.*?(?=jpg)'  ~/movie_local|head -1)
 	url_first_part="https://images-na.ssl-images-amazon.com/images/M"
 	url_last_part="jpg"
-	image_url="$url_first_part$count$url_last_part"
-	mkdir ~/${OPTARG}
-	wget -q "${image_url}" -O ~/${OPTARG}/${OPTARG}Poster.jpg
+	image_url="$url_first_part$poster$url_last_part"
+	folder_name="${OPTARG}"
+	mkdir ~/"${folder_name}"
+	wget -q "${image_url}" -O ~/"${folder_name}"/"${folder_name}"Poster.jpg
 	echo "Download complete"
-	#alias xdg-open="xdg-open 2>/dev/null"
-	#xdg-open ~/zootopia
 	rm ~/movie_local
 }
 getRating()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	count=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
+	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
 	echo "Imdb Rating: "
-	echo "$count"
+	echo "$rating"
 	rm ~/movie_local
 }
 getMovies()
 {
 	wget "http://www.imdb.com/movies-in-theaters/" -q -O ~/movie_local 
-	count=$(grep -zPo '(?<=alt=")\K.*?(?= Poster)'  ~/movie_local)
-	echo "Movies to be released this week: "
-	echo "$count"
+	movies=$(grep -zPo '(?<=alt=")\K.*?(?= Poster)'  ~/movie_local)
+	echo "Movies in theatres this week: "
+	echo "$movies"
 	rm ~/movie_local
 }
 getActor()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	count=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\.)'  ~/movie_local)
+	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\.)'  ~/movie_local)
 	echo -n "Actors: "
-	echo "$count"
+	echo "$actor"
 	rm ~/movie_local
 }
 getCast()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	count=$(grep -zPo '(?<=><img height="44" width="32" alt=")\K.*?(?=" title)'  ~/movie_local)
+	cast=$(grep -zPo '(?<=><img height="44" width="32" alt=")\K.*?(?=" title)'  ~/movie_local)
 	echo "Cast: "
-	echo "$count"
+	echo "$cast"
 	rm ~/movie_local
 }
 getOverview()
 {
-
+	color="\033[92m"
 	wget "${final_url}" -q -O ~/movie_local 
 	title=$(grep -zPo '(?<=<title>)\K.*?(?= \()'  ~/movie_local)
-	echo "Title\t\t:$title"
+	echo "${color}Title\t\t:\033[96m$title"
 	year=$(grep -zPo '(?<=<title>).*?\(\K.*?(?=\))'  ~/movie_local)
-	echo "Year\t\t:$year"
+	echo "${color}Year\t\t:\033[96m$year"
 	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
-	echo "Rating\t\t:$rating/10"
+	echo "${color}Rating\t\t:\033[96m$rating/10"
 	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
-	echo -n "Director\t:$director\n"
+	echo -n "${color}Director\t:\033[96m$director\n"
 	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With \K.*?(?=\.)'  ~/movie_local)
-	echo -n "Cast\t\t:$actor\n"
+	echo -n "${color}Cast\t\t:\033[96m$actor\n"
 	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
-	echo "Plot\t\t:\n\n$summary\n"
-	echo "\nImdb movie URL\t:$final_url"
+	echo "${color}Plot\t\t:\n\n\033[96m$summary\n"
+	echo "${color}Imdb movie URL\t:$urlColor$final_url"
 	rm ~/movie_local
 }
 getHistory()
@@ -129,28 +138,46 @@ getHistory()
 unset flag #this is to unset the value of flag if it had any value previously
 while getopts ":a:c:d:D:hHo:p:r:s:w" opt
 do
-	echo "${OPTARG}" >> ~/movie_history.txt
+	
 	case $opt in
 	    a)
 	      movie="${OPTARG}"
 	      getUrl
-	      getActor
-	      flag='1' #we set flag to 1 so as to check if an option was pased or not.Since it skips the getopt part if no option was passed
+	      if [ $check -eq 1 ]
+	      then
+		      getActor
+	      fi
+	      echo "${OPTARG}" >> ~/movie_history.txt
+	      flag='1'
 	      ;;
 	    c)
               getUrl
-	      getCast
+	      if [ $check -eq 1 ]
+	      then
+		      getCast
+	      fi
 	      flag='1'
+ 	      echo "${OPTARG}" >> ~/movie_history.txt
+
 	      ;;
             d)
               getUrl
-	      getDuration
-              flag='1'
+	      if [ $check -eq 1 ]
+	      then
+		      getDuration
+	      fi
+	      flag='1'
+ 	      echo "${OPTARG}" >> ~/movie_history.txt
+
 	      ;;
 	    D)
               getUrl
-              getDirector
-              flag='1'
+	      if [ $check -eq 1 ]
+	      then
+		      getDirector
+	      fi
+	      flag='1'
+ 	      echo "${OPTARG}" >> ~/movie_history.txt
 	      ;;
             h)usage
               flag='1'
@@ -161,35 +188,52 @@ do
 	      ;;
             o)
               getUrl
-	      getOverview
-              flag='1'
+	      if [ $check -eq 1 ]
+	      then
+		      getOverview
+	      fi
+	      flag='1'
+ 	      echo "${OPTARG}" >> ~/movie_history.txt
 	      ;;
             p)
               getUrl
-	      getPoster
-              flag='1'
+	      if [ $check -eq 1 ]
+              then
+		      getPoster
+	      fi
+	      flag='1'
+ 	      echo "${OPTARG}" >> ~/movie_history.txt
 	      ;;
             r)
               getUrl
-	      getRating
-              flag='1'
+	      if [ $check -eq 1 ]
+	      then
+		      getRating
+	      fi
+	      flag='1'
+ 	      echo "${OPTARG}" >> ~/movie_history.txt
 	      ;;
             s)
               getUrl
-              getSummary
+	      if [ $check -eq 1 ]
+              then
+	              getSummary
+	      fi
 	      flag='1'
+ 	      echo "${OPTARG}" >> ~/movie_history.txt
               ;;
             w)
               getMovies
               flag='1'
 	      ;;
 	    \?)
-	      echo "Invalid option: -$OPTARG" >&2
+	      echo "Invalid option: -$OPTARG"
               flag='1'
 	      usage
 	      ;;
 	    :)
-	      echo "Option -$OPTARG requires an argument." >&2
+	      #echo "Option -$OPTARG requires an argument." >&2
+ 	      echo "Option -$OPTARG requires an argument."
               usage
 	      flag='1'
 	      ;;
@@ -200,5 +244,3 @@ then
 	echo "No options were passed"
 	usage
 fi
-
-
