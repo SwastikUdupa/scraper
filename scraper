@@ -63,7 +63,7 @@ getDuration()
 getDirector()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. With)'  ~/movie_local)
 	echo -n "Director: "
 	echo "$director"
 	rm ~/movie_local
@@ -100,7 +100,7 @@ getMovies()
 getActor()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\.)'  ~/movie_local)
+	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\. )'  ~/movie_local)
 	echo -n "Actors: "
 	echo "$actor"
 	rm ~/movie_local
@@ -123,9 +123,9 @@ getOverview()
 	echo -e "${color}Year\t\t:\033[96m$year"
 	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
 	echo -e "${color}Rating\t\t:\033[96m$rating/10"
-	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. With)'  ~/movie_local)
 	echo -n -e "${color}Director\t:\033[96m$director\n"
-	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With \K.*?(?=\.)'  ~/movie_local)
+	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With \K.*?(?=\. )'  ~/movie_local)
 	echo -n -e "${color}Cast\t\t:\033[96m$actor\n"
 	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
 	echo -e "${color}Plot\t\t:\n\n\033[96m$summary\n"
@@ -155,7 +155,7 @@ playGame()
 	final_url="www.imdb.com$titleId$part_to_be_added"
 	rm ~/movie_list
 	wget "${final_url}" -q -O ~/movie_local 
-	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. With)'  ~/movie_local)
 	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\. )'  ~/movie_local)
 	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
 	rm ~/movie_local
