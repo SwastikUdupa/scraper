@@ -4,11 +4,12 @@ scriptname=$0   # $0 is the name of the program
 
 usage () {
    cat <<EOF
-Usage: $scriptname [-o] [-a] [-d] [-D] [-c] [-r] [-p] [-H] [-h] [-w] "movie name"
+Usage: $scriptname [-o] [-a] [-d] [-g] [-D] [-c] [-r] [-p] [-H] [-h] [-w] "movie name"
    -a   Lead actor and Actress
    -c   Cast
    -d   Duration
    -D   Director
+   -g   Play the minigame
    -h   Help
    -H   History of previous searches by the user
    -o   Overview(Actor,Actress,Ratings,Director and Plot)
@@ -117,18 +118,18 @@ getOverview()
 	color="\033[92m"
 	wget "${final_url}" -q -O ~/movie_local 
 	title=$(grep -zPo '(?<=<title>)\K.*?(?= \()'  ~/movie_local)
-	echo "${color}Title\t\t:\033[96m$title"
+	echo -e "${color}Title\t\t:\033[96m$title"
 	year=$(grep -zPo '(?<=<title>).*?\(\K.*?(?=\))'  ~/movie_local)
-	echo "${color}Year\t\t:\033[96m$year"
+	echo -e "${color}Year\t\t:\033[96m$year"
 	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
-	echo "${color}Rating\t\t:\033[96m$rating/10"
+	echo -e "${color}Rating\t\t:\033[96m$rating/10"
 	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
-	echo -n "${color}Director\t:\033[96m$director\n"
+	echo -n -e "${color}Director\t:\033[96m$director\n"
 	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With \K.*?(?=\.)'  ~/movie_local)
-	echo -n "${color}Cast\t\t:\033[96m$actor\n"
+	echo -n -e "${color}Cast\t\t:\033[96m$actor\n"
 	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
-	echo "${color}Plot\t\t:\n\n\033[96m$summary\n"
-	echo "${color}Imdb movie URL\t:$urlColor$final_url"
+	echo -e "${color}Plot\t\t:\n\n\033[96m$summary\n"
+	echo -e "${color}Imdb movie URL\t:$urlColor$final_url"
 	rm ~/movie_local
 }
 getHistory()
