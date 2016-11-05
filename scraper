@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 scriptname=$0   # $0 is the name of the program
 
 usage () {
    cat <<EOF
-Usage: $scriptname [-o] [-a] [-d] [-c] [-r] [-p] [-H] [-h] [-w] "movie name"
+Usage: $scriptname [-o] [-a] [-d] [-D] [-c] [-r] [-p] [-H] [-h] [-w] "movie name"
    -a   Lead actor and Actress
    -c   Cast
    -d   Duration
@@ -25,7 +25,7 @@ getUrl() #this is used to get the url of the first movie in the suggestions of i
 {
 	url_first_part="http://www.imdb.com/find?ref_=nv_sr_fn&q="
 	url_last_part="&s=all"
-	url="${url_first_part}${OPTARG}${url_last_part}" #the flower brackets ar used for space protection
+	url="${url_first_part}${OPTARG}${url_last_part}" #the flower brackets are used for space protection
 	wget "${url}" -q -O ~/movie_list #to save the page source of movie suggestions in a local file called movie_list
 	result=$(grep -zPo -m 1 '(?<=<h1 class="findHeader">)\K.*?(?=<span class="findSearchTerm">)'  ~/movie_list|head -1)
 	cmpText="No results found for "
@@ -135,8 +135,79 @@ getHistory()
 {
 	cat ~/movie_history.txt
 }
+playGame()
+{
+	lives=3
+	while [ $lives -gt 0 ]
+	do
+		movie=$(sort --random-sort ~/gamemovielist | head -n 1)
+		lcmovie=$(echo "$movie" | tr '[:upper:]' '[:lower:]')
+		url_first_part="http://www.imdb.com/find?ref_=nv_sr_fn&q="
+		url_last_part="&s=all"
+		url="${url_first_part}${movie}${url_last_part}"
+		wget "${url}" -q -O ~/movie_list
+		titleId=$(grep -Po -m 1 "(?<=td class=\"primary_photo\"> <a href=\").*?(?=\s*ref_=fn_al_tt_1\")" ~/movie_list|head -1) 
+		part_to_be_added="ref_=fn_al_tt_1"
+		final_url="www.imdb.com$titleId$part_to_be_added"
+		rm ~/movie_list
+		wget "${final_url}" -q -O ~/movie_local 
+		director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+		actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\.)'  ~/movie_local)
+		summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
+		rm ~/movie_local
+		flag=0
+		echo "Clue 1:Director of the movie is ${director}"
+		echo ""
+		echo -n "Your guess: "
+		read guess
+		if [ "$guess" == "$lcmovie" ]
+		then
+			flag=1
+			echo "Right guess! The movie is $movie"
+			echo ""
+		else
+			echo -e "Sorry.Wrong guess\n"
+			lives=$(($lives-1))
+			if [[ $flag -eq 0 ]]
+			then
+				echo "Clue 2:Actors in the movie are $actor"
+				echo ""
+				echo -n "Your guess: "
+				read guess
+				if [[ "$guess" == "$lcmovie" ]]
+				then
+					echo "Right guess! The movie is $movie"
+					echo ""
+				else
+					echo -e "Sorry.Wrong guess\n"
+					lives=$(($lives-1))
+					if [[ $flag -eq 0 ]]
+					then
+						echo "Clue 3:Plot of the movie is ${summary}"
+						echo ""
+						echo -n "Your guess: "
+						read guess
+						if [[ "$guess" == "$lcmovie" ]]
+						then
+							echo "Right guess! The movie is ${movie}"
+							echo ""
+						else
+							echo -e "Sorry.Wrong guess\n"
+							lives=$(($lives-1))
+						fi
+					fi
+				fi
+			fi
+		fi
+	done
+	echo "Game over!"
+	echo "The movie was $lcmovie"
+	echo ""
+}
+
+
 unset flag #this is to unset the value of flag if it had any value previously
-while getopts ":a:c:d:D:hHo:p:r:s:w" opt
+while getopts ":a:c:d:D:hHgo:p:r:s:w" opt
 do
 	
 	case $opt in
@@ -178,6 +249,9 @@ do
 	      fi
 	      flag='1'
  	      echo "${OPTARG}" >> ~/movie_history.txt
+	      ;;
+	    g)playGame
+	      flag='1'
 	      ;;
             h)usage
               flag='1'
@@ -232,7 +306,6 @@ do
 	      usage
 	      ;;
 	    :)
-	      #echo "Option -$OPTARG requires an argument." >&2
  	      echo "Option -$OPTARG requires an argument."
               usage
 	      flag='1'
