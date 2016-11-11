@@ -70,7 +70,7 @@ getDirector()
 	wget "${final_url}" -q -O ~/movie_local 
 	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
 	echo -n "${lg}Director: "
-	echo "\033[96m$director"
+	echo -e "\033[96m$director"
 	rm ~/movie_local
 }
 getPoster()
@@ -91,7 +91,7 @@ getRating()
 	wget "${final_url}" -q -O ~/movie_local 
 	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
 	echo "${lg}Imdb Rating: "
-	echo "\033[96m$rating"
+	echo -e "\033[96m$rating"
 	rm ~/movie_local
 }
 getMovies()
@@ -99,15 +99,15 @@ getMovies()
 	wget "http://www.imdb.com/movies-in-theaters/" -q -O ~/movie_local 
 	movies=$(grep -zPo '(?<=alt=")\K.*?(?= Poster)'  ~/movie_local)
 	echo "${lg}Movies in theatres this week: "
-	echo "\033[96m$movies"
+	echo -e "\033[96m$movies"
 	rm ~/movie_local
 }
 getActor()
 {
 	wget "${final_url}" -q -O ~/movie_local 
 	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\. )'  ~/movie_local)
-	echo -n "${lg}Actors: "
-	echo "\033[96m$actor"
+	echo -n -e "${lg}Actors: "
+	echo -e "\033[96m$actor"
 	rm ~/movie_local
 }
 getCast()
