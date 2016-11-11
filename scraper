@@ -21,7 +21,12 @@ Usage: $scriptname [-o] [-a] [-d] [-g] [-D] [-c] [-r] [-p] [-H] [-h] [-w] "movie
 EOF
    exit 0
 }
-urlColor="\033[91m"
+lg="\033[92m"
+ly="\033[93m"
+lb="\033[96m"
+green="\033[32m"
+red="\033[31m"
+lr="\033[91m"
 getUrl() #this is used to get the url of the first movie in the suggestions of imdb  based on your input
 {
 	url_first_part="http://www.imdb.com/find?ref_=nv_sr_fn&q="
@@ -48,24 +53,24 @@ getSummary()
 {
 	wget "${final_url}" -q -O ~/movie_local
 	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local) #z option is added to include multi line functionality for grep
-	echo "Summary:"
-	echo "$summary"
+	echo -e "${lg} Summary:"
+	echo -e "\033[96m$summary"
 	rm ~/movie_local
 }
 getDuration()
 {
 	wget "${final_url}" -q -O ~/movie_local 
 	duration=$(grep -zPo '(?<=<time itemprop="duration" datetime=").*?>\K.*?(?=</time>)'  ~/movie_local)
-	echo -n "Duration: "
-	echo "$duration"
+	echo -e -n "${lg}Duration: "
+	echo -e "\033[96m$duration"
 	rm ~/movie_local
 }
 getDirector()
 {
 	wget "${final_url}" -q -O ~/movie_local 
-	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. With)'  ~/movie_local)
-	echo -n "Director: "
-	echo "$director"
+	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+	echo -n "${lg}Director: "
+	echo "\033[96m$director"
 	rm ~/movie_local
 }
 getPoster()
@@ -78,58 +83,57 @@ getPoster()
 	folder_name="${OPTARG}"
 	mkdir ~/"${folder_name}"
 	wget -q "${image_url}" -O ~/"${folder_name}"/"${folder_name}"Poster.jpg
-	echo "Download complete"
+	echo "\033[96mDownload complete"
 	rm ~/movie_local
 }
 getRating()
 {
 	wget "${final_url}" -q -O ~/movie_local 
 	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
-	echo "Imdb Rating: "
-	echo "$rating"
+	echo "${lg}Imdb Rating: "
+	echo "\033[96m$rating"
 	rm ~/movie_local
 }
 getMovies()
 {
 	wget "http://www.imdb.com/movies-in-theaters/" -q -O ~/movie_local 
 	movies=$(grep -zPo '(?<=alt=")\K.*?(?= Poster)'  ~/movie_local)
-	echo "Movies in theatres this week: "
-	echo "$movies"
+	echo "${lg}Movies in theatres this week: "
+	echo "\033[96m$movies"
 	rm ~/movie_local
 }
 getActor()
 {
 	wget "${final_url}" -q -O ~/movie_local 
 	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\. )'  ~/movie_local)
-	echo -n "Actors: "
-	echo "$actor"
+	echo -n "${lg}Actors: "
+	echo "\033[96m$actor"
 	rm ~/movie_local
 }
 getCast()
 {
 	wget "${final_url}" -q -O ~/movie_local 
 	cast=$(grep -zPo '(?<=><img height="44" width="32" alt=")\K.*?(?=" title)'  ~/movie_local)
-	echo "Cast: "
-	echo "$cast"
+	echo "${lg}Cast: "
+	echo "\033[96m$cast"
 	rm ~/movie_local
 }
 getOverview()
 {
-	color="\033[92m"
 	wget "${final_url}" -q -O ~/movie_local 
 	title=$(grep -zPo '(?<=<title>)\K.*?(?= \()'  ~/movie_local)
-	echo -e "${color}Title\t\t:\033[96m$title"
+	echo -e "${lg}Title\t\t:\033[96m$title"
 	year=$(grep -zPo '(?<=<title>).*?\(\K.*?(?=\))'  ~/movie_local)
-	echo -e "${color}Year\t\t:\033[96m$year"
+	echo -e "${lg}Year\t\t:\033[96m$year"
 	rating=$(grep -zPo '(?<=<strong title=")\K.*?(?= based on)'  ~/movie_local)
-	echo -e "${color}Rating\t\t:\033[96m$rating/10"
-	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. With)'  ~/movie_local)
-	echo -n -e "${color}Director\t:\033[96m$director\n"
+	echo -e "${lg}Rating\t\t:\033[96m$rating/10"
+	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
+	echo -n -e "${lg}Director\t:\033[96m$director\n"
 	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With \K.*?(?=\. )'  ~/movie_local)
-	echo -n -e "${color}Cast\t\t:\033[96m$actor\n"
+	echo -n -e "${lg}Cast\t\t:\033[96m$actor\n"
 	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
-	echo -e "${color}Plot\t\t:\n\n\033[96m$summary\n"
-	echo -e "${color}Imdb movie URL\t:$urlColor$final_url"
+	echo -e "${lg}Plot\t\t:\n\n\033[96m$summary\n"
+	echo -e "${lg}Imdb movie URL\t:\033[91m$urllg$final_url"
 	rm ~/movie_local
 }
 getHistory()
@@ -138,11 +142,69 @@ getHistory()
 }
 lives=3
 score=0
-playGame()
+getdisplay()
 {
+ 	 DATA[0]=" #    #   ####   #    #     #    ######"
+	 DATA[1]=" ##  ##  #    #  #    #     #    #     "
+	 DATA[2]=" # ## #  #    #  #    #     #    ##### "
+	 DATA[3]=" #    #  #    #  #    #     #    #     "
+	 DATA[4]=" #    #  #    #   #  #      #    #     "
+	 DATA[5]=" #    #   ####     ##       #    ######"
+         DATA[6]="                                       "
+	 DATA[7]="		  ####     ##    #    #  ######"
+	 DATA[8]="		 #    #   #  #   ##  ##  #     "
+	 DATA[9]="		 #       #    #  # ## #  ##### "
+	DATA[10]="		 #  ###  ######  #    #  #     "
+	DATA[11]="		 #    #  #    #  #    #  #     "
+	DATA[12]="		  ####   #    #  #    #  ######"
+
+
+     echo
+
+
+    # virtual coordinate system is X*Y ${#DATA} * 8
+    ## This is to put the title in the centre
+
+    REAL_OFFSET_X=$(($((`tput cols` - 56)) / 2))
+    REAL_OFFSET_Y=$(($((`tput lines` - 6)) / 2))
+
+    draw_char() {
+        V_COORD_X=$1
+        V_COORD_Y=$2
+
+        tput cup $((REAL_OFFSET_Y + V_COORD_Y)) $((REAL_OFFSET_X + V_COORD_X))
+
+        printf %c ${DATA[V_COORD_Y]:V_COORD_X:1}
+    }
+
+    trap 'exit 1' INT TERM
+
+    tput civis
+    clear
+    tempp=8
+    while :; do
+        tempp=`expr $tempp - 8`
+        for ((c=1; c <= 7; c++)); do
+            tput setaf $c
+            for ((x=0; x<${#DATA[0]}; x++)); do
+                for ((y=0; y<=12; y++)); do
+                    draw_char $x $y
+                done
+            done
+        done
+        sleep 1
+        clear
+        break
+    done
+}
+playGame()
+{        
+        
+        
 	clear
 	echo -e "Current score:$score\t\tLives remaining:$lives"
 	echo ""
+	#echo "Selecting a movie....."
 	movie=$(sort --random-sort ~/gamemovielist | head -n 1)
 	lcmovie=$(echo "$movie" | tr '[:upper:]' '[:lower:]')
 	lcmovie2=$(echo "$lcmovie" | tr -d ' ')
@@ -155,56 +217,56 @@ playGame()
 	final_url="www.imdb.com$titleId$part_to_be_added"
 	rm ~/movie_list
 	wget "${final_url}" -q -O ~/movie_local 
-	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. With)'  ~/movie_local)
+	director=$(grep -zPo '(?<=<meta name="description" content="Directed by )\K.*?(?=\. )'  ~/movie_local)
 	actor=$(grep -zPo '(?<=<meta name="description" content="Directed by ).* With\K.*?(?=\. )'  ~/movie_local)
 	summary=$(grep -zPo '<div class="summary_text" itemprop="description">\s*\K.*?(?=\s*</div>)' ~/movie_local)
 	rm ~/movie_local
 	flag=0
-	echo "Clue 1:Director of the movie is ${director}"
+	echo -e "${ly}Clue 1:\033[36mDirector of the movie is ${director}"
 	echo ""
-	echo -n "Your guess: "
+	echo -e -n "${ly}Your guess: "
 	read guess
 	guess2=$(echo "$guess" | tr -d ' ')
 	if [ "$guess2" == "$lcmovie2" ]
 	then
 		flag=1
-		echo "Right guess! The movie is $movie"
+		echo -e "${lg}Right guess! The movie is $movie"
 		echo ""
 		score=$(($score+50))
 		sleep 5
 	else
-		echo -e "Sorry.Wrong guess\n"
+		echo -e "${red}Sorry.Wrong guess\n"
 		if [[ $flag -eq 0 ]]
 		then
-			echo "Clue 2:Actors in the movie are $actor"
+			echo -e "${ly}Clue 2:\033[36mActors in the movie are $actor"
 			echo ""
-			echo -n "Your guess: "
+			echo -e -n "${ly}Your guess: "
 			read guess
 			guess2=$(echo "$guess" | tr -d ' ')
 			if [[ "$guess2" == "$lcmovie2" ]]
 			then
-				echo "Right guess! The movie is $movie"
+				echo -e "${lg}Right guess! The movie is $movie"
 				echo ""
 				score=$(($score+30))
 				sleep 5
 			else
-				echo -e "Sorry.Wrong guess\n"
+				echo -e "${red}Sorry.Wrong guess\n"
 				if [[ $flag -eq 0 ]]
 				then
-					echo "Clue 3:Plot of the movie is ${summary}"
+					echo -e "${ly}Clue 3:\033[36msPlot of the movie is ${summary}"
 					echo ""
-					echo -n "Your guess: "
+					echo -e -n "${ly}Your guess: "
 					read guess
 					guess2=$(echo "$guess" | tr -d ' ')
 					if [[ "$guess2" == "$lcmovie2" ]]
 					then
-						echo "Right guess! The movie is ${movie}"
+						echo -e "${lg}Right guess! The movie is ${movie}"
 						echo ""
 						score=$(($score+10))
 						sleep 5
 					else
-						echo -e "Sorry.Wrong guess\n"
-						echo "The movie was $lcmovie"
+						echo -e "${red}Sorry.Wrong guess\n"
+						echo -e "${lg}The movie was \033[091m$lcmovie"
 						lives=$(($lives-1))
 						sleep 5
 					fi
@@ -214,9 +276,9 @@ playGame()
 	fi
 	if [ $lives -eq 0 ]
 	then
-		echo "Game over!"
+		echo -e "\033[91mGame over!"
 		echo ""
-		echo -n "Do you want to restart?(Y/n)"
+		echo -e -n "${ly}Do you want to restart?(${lg}Y/${lr}n)"
 		read response
 			if [ "$response" == "Y" ]
 			then
@@ -275,10 +337,11 @@ do
 	      flag='1'
  	      echo "${OPTARG}" >> ~/movie_history.txt
 	      ;;
-	    g)echo -e "The rules of the game are as follows:\n1.The player has to name the movie based on the clues given.The clues are given one at a time\n2.The answers are space and case insensitive but beware of \"THE\"\n3.The scoring scheme:If answered at 1st clue:50 points\nIf answered at the 2nd clue:30 points\nIf answered at third clue:10 points\n4.If player is unable to answer a movie he loses one of his three lives\nDo you want to play?(Y/n)"
+	    g)echo -e "${lr}The rules of the game are as follows:\n${lb}1.The player has to name the movie based on the clues given.The clues are given one at a time\n2.The answers are space and case insensitive but beware of \"THE\"\n3.The scoring scheme:\n\tIf answered at 1st clue:50 points\n\tIf answered at the 2nd clue:30 points\n\tIf answered at third clue:10 points\n4.If player is unable to answer a movie he loses one of his three lives\nDo you want to play?(${lg}Y/${lr}n)"
 	      read response
 	      if [ "$response" == "Y" ]
 	      then
+		      getdisplay
 		      playGame
 	      fi
 	      flag='1'
